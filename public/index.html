@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask Sixth Street Bakery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Kraft paper bag + till receipt + rubber-stamp blue. */
+  :root {
+    --kraft: #D9BE97; --kraft-dark: #B8976C; --ink: #2A1D14;
+    --receipt: #FFFDF8; --stamp: #2E4A7D; --muted: #6B5646;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--kraft); color: var(--ink);
+         font: 17px/1.55 "Atkinson Hyperlegible", system-ui, sans-serif;
+         display: grid; place-items: start center; padding: 48px 16px; }
+  main { width: 100%; max-width: 560px; }
+  h1 { font: 400 2.4rem/1.1 "Young Serif", Georgia, serif; margin: 0 0 6px; }
+  .lede { margin: 0 0 28px; color: var(--muted); }
+  .receipt { background: var(--receipt); padding: 28px 24px 32px; position: relative;
+             box-shadow: 0 1px 0 var(--kraft-dark);
+             -webkit-mask: radial-gradient(circle 6px at 50% 100%, #0000 98%, #000) 0 0/14px 100% repeat-x;
+                     mask: radial-gradient(circle 6px at 50% 100%, #0000 98%, #000) 0 0/14px 100% repeat-x; }
+  #log { display: flex; flex-direction: column; gap: 18px; margin-bottom: 20px; }
+  #log:empty::before { content: "Ask about opening hours, prices, cakes to order or delivery."; color: var(--muted); }
+  .q { font-weight: 700; }
+  .a { border-top: 1px dashed var(--kraft-dark); padding-top: 10px; }
+  .sources { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .sources span { font-size: 0.8rem; color: var(--stamp); border: 1.5px solid var(--stamp);
+                  padding: 1px 8px; border-radius: 3px; transform: rotate(-1deg); }
+  .meta { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+  form { display: flex; gap: 8px; }
+  label { position: absolute; left: -9999px; }
+  input { flex: 1; font: inherit; padding: 12px 14px; border: 1.5px solid var(--ink); background: #fff; border-radius: 4px; }
+  button { font: 700 1rem "Atkinson Hyperlegible", sans-serif; padding: 12px 18px; border: 0; border-radius: 4px;
+           background: var(--stamp); color: #fff; cursor: pointer; min-height: 44px; }
+  button:disabled { opacity: 0.6; cursor: wait; }
+  :focus-visible { outline: 3px solid var(--stamp); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ask Sixth Street Bakery</h1>
+  <p class="lede">Answers come only from the bakery's own price list, FAQ and policies.</p>
+  <section class="receipt" aria-live="polite">
+    <div id="log"></div>
+    <form id="f">
+      <label for="q">Your question</label>
+      <input id="q" autocomplete="off" placeholder="Do you make gluten-free birthday cakes?" required>
+      <button id="b">Ask</button>
+    </form>
+  </section>
+</main>
+<script>
+  const log = document.getElementById("log"), f = document.getElementById("f"),
+        q = document.getElementById("q"), b = document.getElementById("b");
+  const el = (tag, cls, text) => { const e = document.createElement(tag); e.className = cls; e.textContent = text; return e; };
+  f.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const question = q.value.trim(); if (!question) return;
+    b.disabled = true; b.textContent = "Checking…";
+    log.append(el("div", "q", question));
+    try {
+      const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      const a = el("div", "a", data.answer);
+      if (!data.refused) {
+        const s = el("div", "sources", "");
+        [...new Set(data.sources.map((x) => x.source))].forEach((src) => s.append(el("span", "", src)));
+        a.append(s);
+      }
+      a.append(el("div", "meta", `${data.timings.totalMs} ms` + (data.costUsd != null ? ` · $${Number(data.costUsd).toFixed(5)}` : "")));
+      log.append(a);
+    } catch (e) {
+      log.append(el("div", "a", "Couldn't get an answer: " + e.message + ". Check the server logs."));
+    } finally { b.disabled = false; b.textContent = "Ask"; q.value = ""; q.focus(); }
+  });
+</script>
+</body>
+</html>

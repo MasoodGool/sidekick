@@ -1,0 +1,12 @@
+{"id":"q01","question":"What time do you open on Saturday?","answerable":true,"expected_source":"opening-hours-and-location.md","expected_answer":"07:30 to 14:00"}
+{"id":"q02","question":"Are you open on Mondays?","answerable":true,"expected_source":"opening-hours-and-location.md","expected_answer":"No, closed on Mondays"}
+{"id":"q03","question":"How much is a sourdough loaf?","answerable":true,"expected_source":"prices.md","expected_answer":"R75 for 800 g"}
+{"id":"q04","question":"How far in advance must I order a birthday cake?","answerable":true,"expected_source":"orders-delivery-and-policies.md","expected_answer":"At least 72 hours"}
+{"id":"q05","question":"Can I get a gluten-free cake and is it safe for coeliacs?","answerable":true,"expected_source":"prices.md","expected_answer":"Yes, add R90, but cannot guarantee no traces of wheat"}
+{"id":"q06","question":"Do you deliver on Sunday?","answerable":true,"expected_source":"orders-delivery-and-policies.md","expected_answer":"No Sunday deliveries"}
+{"id":"q07","question":"What does delivery cost for a R550 order?","answerable":true,"expected_source":"orders-delivery-and-policies.md","expected_answer":"Free, because it's over R500"}
+{"id":"q08","question":"Can I pay with SnapScan?","answerable":true,"expected_source":"orders-delivery-and-policies.md","expected_answer":"Yes"}
+{"id":"q09","question":"Which breads are vegan?","answerable":true,"expected_source":"orders-delivery-and-policies.md","expected_answer":"Rye and caraway, seeded wholewheat"}
+{"id":"q10","question":"Do you sell coffee?","answerable":false,"expected_source":null,"expected_answer":"Not in the documents: should refuse"}
+{"id":"q11","question":"Can I book the bakery for a private event?","answerable":false,"expected_source":null,"expected_answer":"Not in the documents: should refuse"}
+{"id":"q12","question":"What's the WiFi password?","answerable":false,"expected_source":null,"expected_answer":"Not in the documents: should refuse"}
