@@ -2,17 +2,17 @@ import express from "express";
 import { config } from "./config.js";
 import { answer } from "./answer.js";
 import { pool } from "./db.js";
+import { parseQuestion } from "./validate.js";
 
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
 app.post("/api/ask", async (req, res) => {
-  const question = String(req.body?.question ?? "").trim();
-  if (!question) return res.status(400).json({ error: "question is required" });
-  if (question.length > 1000) return res.status(400).json({ error: "question too long" });
+  const parsed = parseQuestion(req.body);
+  if (!parsed.ok) return res.status(400).json({ error: parsed.error });
   try {
-    const r = await answer(question);
+    const r = await answer(parsed.question);
     res.json({ answer: r.answer, refused: r.refused, sources: r.sources, costUsd: r.costUsd, timings: r.timings });
   } catch (e) {
     console.error(e);
