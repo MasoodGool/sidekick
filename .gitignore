@@ -2,3 +2,5 @@ node_modules
 dist
 .env
 evals/results/*.json
+data/techqa/raw
+data/techqa/docs
