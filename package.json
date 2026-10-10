@@ -11,6 +11,8 @@
     "db:up": "docker compose up -d",
     "db:schema": "tsx src/scripts/apply-schema.ts",
     "ingest": "tsx src/ingest.ts",
+    "techqa:fetch": "bash scripts/techqa-fetch.sh",
+    "techqa:build": "tsx src/scripts/techqa-build.ts",
     "dev": "tsx watch src/server.ts",
     "ask": "tsx src/scripts/ask.ts",
     "eval": "tsx evals/run.ts",
