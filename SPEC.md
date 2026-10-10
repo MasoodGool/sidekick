@@ -131,6 +131,19 @@ Each comparison reports n, the metric definition, both numbers, and the delta. R
 | Cost per 1,000 conversations | | | Traces |
 | Pilot: questions handled without the owner | | | Pilot week logs |
 
+## Interim track: public benchmark (until pilot data arrives)
+
+Phase 1 needs real customer questions over a real business's documents, and the pilot business isn't secured yet. Until it is, Phase 1's RAG work runs on a public benchmark so the pipeline, eval harness and baseline are built and measured on real data rather than on invented questions. This is a stopgap: the pilot business stays the goal, and nothing below replaces the pilot requirements or the Definition of done.
+
+- **Dataset: IBM TechQA** (ACL 2020, arXiv:1911.02984). The questions are real user questions from IBM's developer forums, answered from IBM's published support articles (Technotes). It meets "real questions over real company documents"; it does not meet "SA small business" or "live".
+- **Labelling: every number names its dataset.** Results from this track are reported as "TechQA public benchmark, n=…" and are never presented as pilot results. In the README they sit in their own table, separate from the pilot results table above.
+- **Licence decides what goes in the repo.** If TechQA's licence allows redistribution, an anonymised slice is committed under `data/techqa/`. If not, the repo gets a download script and a pinned file list instead, and the data itself stays out of git.
+- **Corpus construction is fixed in advance and recorded.** The corpus is the Technotes that the selected questions point to, plus randomly sampled distractor Technotes from the same release (fixed seed). Using only the referenced documents would make retrieval artificially easy. The distractor count is chosen before any run, so that the long-context baseline fits in one prompt, and is written into the eval config.
+- **Ground truth comes from the dataset, not from us.** Questions, gold answers, gold document IDs and any unanswerable flags come from TechQA's own labels. We don't write or edit questions. The question split is locked before any approach is run.
+- **Same workflow.** Ground truth plus the long-context baseline first, then hybrid RAG compared against it on the same locked set, then a decision record. The decision record states that the result comes from TechQA and may not carry over to the pilot.
+- **Exit.** When pilot data arrives, Phase 1's ground truth and comparison are re-run on it, and those results become the headline. TechQA results stay in the repo as a secondary, clearly labelled benchmark.
+- **Known limits:** enterprise IT support is a different domain from a small business (longer, more technical documents and questions), and it says nothing about the agent, pilot or SA-specific claims.
+
 ## Build workflow (every phase follows this)
 
 1. **Product idea:** the phase's goal, stated as a problem for the pilot business.
@@ -149,7 +162,7 @@ Each comparison reports n, the metric definition, both numbers, and the delta. R
 
 | Phase | When | Deliverables | Checklist items covered |
 | --- | --- | --- | --- |
-| 1. Real RAG, live | This weekend | **First:** FAQ ground-truth set from real customer questions + long-context baseline run. **Then:** real corpus ingested, hybrid RAG vs long-context compared, decision record, unit tests + CI, deployed, cost tracking, error handling | Real RAG + corpus, eval set, baseline, deployment, cost monitoring, error handling |
+| 1. Real RAG, live | This weekend | **First:** FAQ ground-truth set from real customer questions + long-context baseline run (on the TechQA interim track until pilot data arrives; see "Interim track"). **Then:** real corpus ingested, hybrid RAG vs long-context compared, decision record, unit tests + CI, deployed, cost tracking, error handling | Real RAG + corpus, eval set, baseline, deployment, cost monitoring, error handling |
 | 2. Agents | Week 2 | Router, Orders and Handoff agents, owner approval queue, agent and safety evals, CI evals | Multi-agent workflow, production instincts |
 | 3. Pilot | Week 3 | One week live with the business; collect labelled routing data; pilot metrics | Live and solving a real problem, quantified results |
 | 4. Fine-tune and write-up | Week 4 | Router fine-tune vs baseline, all comparisons, trade-offs, limitations, demo video | Fine-tune + baseline, honest comparison, trade-offs, polish |
