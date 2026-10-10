@@ -13,6 +13,12 @@ describe("chunkText", () => {
     expect(chunkText("  Hello.  \n\n\n  World.\n")).toEqual(["Hello.\n\nWorld."]);
   });
 
+  it("splits on paragraph boundaries and carries nothing when overlap is 0", () => {
+    // maxTokens 10 => 40 chars; overlap 0 so boundaries are exact.
+    const text = [para("a", 30), para("b", 30), para("c", 30)].join("\n\n");
+    expect(chunkText(text, 10, 0)).toEqual([para("a", 30), para("b", 30), para("c", 30)]);
+  });
+
   it("starts each chunk with the tail of the previous one (overlap)", () => {
     const text = [para("a", 30), para("b", 30)].join("\n\n");
     const [first, second] = chunkText(text, 10, 2); // overlap 2 tokens => 8 chars

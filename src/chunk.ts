@@ -13,7 +13,8 @@ export function chunkText(text: string, maxTokens = 400, overlapTokens = 60): st
   for (const para of paragraphs) {
     if ((current + "\n\n" + para).length > maxChars && current) {
       chunks.push(current);
-      current = current.slice(-overlapChars) + "\n\n" + para; // carry overlap
+      const carry = overlapChars > 0 ? current.slice(-overlapChars) : ""; // slice(-0) would carry everything
+      current = carry ? carry + "\n\n" + para : para;
     } else {
       current = current ? current + "\n\n" + para : para;
     }
