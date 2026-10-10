@@ -3,8 +3,10 @@ import { config } from "../config.js";
 import type { GenerationResult } from "../generate.js";
 
 /** Cost in USD from token usage. Returns null until PRICE_* env vars are set. */
-export function costUsd(usage: GenerationResult["usage"]): number | null {
-  const p = config.pricing;
+export function costUsd(
+  usage: GenerationResult["usage"],
+  p: typeof config.pricing = config.pricing,
+): number | null {
   if (p.input == null || p.output == null) return null;
   const perTok = (rate: number | null) => (rate ?? 0) / 1_000_000;
   return (
