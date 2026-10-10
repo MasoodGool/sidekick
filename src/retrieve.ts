@@ -13,6 +13,8 @@ export interface RetrievedChunk {
 
 export type RetrievalMode = "hybrid" | "vector" | "keyword";
 
+type Row = { id: number; source: string; content: string };
+
 async function vectorSearch(businessId: string, queryVec: number[], k: number) {
   const { rows } = await pool.query(
     `SELECT c.id, d.source, c.content
@@ -22,7 +24,7 @@ async function vectorSearch(businessId: string, queryVec: number[], k: number) {
       LIMIT $3`,
     [businessId, toVector(queryVec), k],
   );
-  return rows as { id: number; source: string; content: string }[];
+  return rows as Row[];
 }
 
 async function keywordSearch(businessId: string, question: string, k: number) {
@@ -34,23 +36,22 @@ async function keywordSearch(businessId: string, question: string, k: number) {
       LIMIT $3`,
     [businessId, question, k],
   );
-  return rows as { id: number; source: string; content: string }[];
+  return rows as Row[];
 }
 
 /**
- * Hybrid retrieval with Reciprocal Rank Fusion:
+ * Reciprocal Rank Fusion:
  * score(chunk) = sum over result lists of 1 / (rrfK + rank).
  * Robust because it uses ranks, not the incomparable raw scores.
  */
-export async function retrieve(
-  question: string,
-  mode: RetrievalMode = "hybrid",
-  businessId = config.businessId,
-): Promise<RetrievedChunk[]> {
-  const { candidateK, topK, rrfK } = config.retrieval;
+export function fuseRrf(
+  lists: { vector?: Row[]; keyword?: Row[] },
+  rrfK: number,
+  topK: number,
+): RetrievedChunk[] {
   const byId = new Map<number, RetrievedChunk>();
 
-  const add = (rows: { id: number; source: string; content: string }[], kind: "vector" | "keyword") =>
+  const add = (rows: Row[], kind: "vector" | "keyword") =>
     rows.forEach((r, i) => {
       const rank = i + 1;
       const existing = byId.get(r.id) ?? { ...r, score: 0 };
@@ -60,8 +61,22 @@ export async function retrieve(
       byId.set(r.id, existing);
     });
 
-  if (mode !== "keyword") add(await vectorSearch(businessId, await embedQuery(question), candidateK), "vector");
-  if (mode !== "vector") add(await keywordSearch(businessId, question, candidateK), "keyword");
+  if (lists.vector) add(lists.vector, "vector");
+  if (lists.keyword) add(lists.keyword, "keyword");
 
   return [...byId.values()].sort((a, b) => b.score - a.score).slice(0, topK);
+}
+
+/** Hybrid retrieval: vector + keyword candidates, fused with RRF. */
+export async function retrieve(
+  question: string,
+  mode: RetrievalMode = "hybrid",
+  businessId = config.businessId,
+): Promise<RetrievedChunk[]> {
+  const { candidateK, topK, rrfK } = config.retrieval;
+  const vector = mode !== "keyword"
+    ? await vectorSearch(businessId, await embedQuery(question), candidateK)
+    : undefined;
+  const keyword = mode !== "vector" ? await keywordSearch(businessId, question, candidateK) : undefined;
+  return fuseRrf({ vector, keyword }, rrfK, topK);
 }
