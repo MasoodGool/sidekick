@@ -3,6 +3,7 @@
  *   npm run eval                          # hybrid retrieval, default model
  *   npm run eval -- --mode vector         # compare retrieval modes
  *   npm run eval -- --model claude-sonnet-5-5
+ *   npm run eval -- --dataset evals/techqa-dev.jsonl   # TechQA public benchmark (see data/techqa/README.md)
  *
  * Metrics:
  *   recall@5      answerable questions whose expected source is in the top 5 chunks
@@ -30,8 +31,9 @@ const arg = (name: string) => {
 };
 const mode = (arg("mode") ?? "hybrid") as RetrievalMode;
 const model = arg("model") ?? config.generationModel;
+const dataset = arg("dataset") ?? "evals/dataset.jsonl";
 
-const cases: Case[] = readFileSync("evals/dataset.jsonl", "utf8")
+const cases: Case[] = readFileSync(dataset, "utf8")
   .split("\n").filter(Boolean).map((l) => JSON.parse(l));
 
 const judge = new Anthropic({ apiKey: config.anthropicKey() });
@@ -75,7 +77,7 @@ const answerable = rows.filter((r) => r.hit !== null);
 const answered = rows.filter((r) => !r.refused);
 const pct = (n: number, d: number) => (d ? Math.round((100 * n) / d) : 0);
 const summary = {
-  mode, model, n: rows.length,
+  dataset, mode, model, n: rows.length,
   recall_at_5: pct(answerable.filter((r) => r.hit).length, answerable.length),
   faithfulness: pct(answered.filter((r) => r.faithful).length, answered.length),
   correctness: pct(rows.filter((r) => r.correct).length, rows.length),
